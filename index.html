@@ -1,0 +1,1562 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Focus Task Timer</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg: #03050d;
+    --panel: rgba(13, 18, 34, 0.72);
+    --border: rgba(255, 255, 255, 0.13);
+    --text: #ffffff;
+    --muted: #8992aa;
+    --primary: #7c5cff;
+    --primary2: #5b3ee4;
+    --green: #4ade80;
+    --yellow: #facc15;
+    --red: #fb7185;
+}
+
+html {
+    color-scheme: dark;
+}
+
+body {
+    min-height: 100vh;
+    overflow-x: hidden;
+    font-family: Inter, Arial, sans-serif;
+    color: var(--text);
+    background:
+        radial-gradient(circle at 15% 20%, rgba(124, 92, 255, .2), transparent 30%),
+        radial-gradient(circle at 85% 80%, rgba(0, 119, 255, .13), transparent 30%),
+        linear-gradient(135deg, #02030a, #080d1d);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 25px;
+}
+
+.background {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.grid {
+    position: absolute;
+    inset: 0;
+    opacity: .2;
+    background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size: 50px 50px;
+}
+
+.glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    animation: glowMove 12s ease-in-out infinite alternate;
+}
+
+.glow.one {
+    width: 350px;
+    height: 350px;
+    background: rgba(124,92,255,.15);
+    left: -100px;
+    top: -80px;
+}
+
+.glow.two {
+    width: 400px;
+    height: 400px;
+    background: rgba(30,100,255,.12);
+    right: -120px;
+    bottom: -100px;
+    animation-delay: -5s;
+}
+
+.clock-bg {
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    border: 3px solid rgba(255,255,255,.12);
+    border-radius: 50%;
+    background:
+        radial-gradient(circle, rgba(255,255,255,.045), rgba(0,0,0,.15));
+    box-shadow:
+        0 0 80px rgba(124,92,255,.08),
+        inset 0 0 50px rgba(255,255,255,.025);
+}
+
+.clock-bg.one {
+    left: 5%;
+    top: 8%;
+    animation: clockFloat 9s ease-in-out infinite;
+}
+
+.clock-bg.two {
+    right: 5%;
+    bottom: 5%;
+    width: 300px;
+    height: 300px;
+    animation: clockFloat 11s ease-in-out infinite reverse;
+}
+
+.clock-face {
+    position: absolute;
+    inset: 16px;
+    border-radius: 50%;
+}
+
+.tick {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 2px;
+    height: 9px;
+    background: rgba(255,255,255,.35);
+    transform-origin: 50% 110px;
+}
+
+.clock-bg.two .tick {
+    transform-origin: 50% 130px;
+}
+
+.tick:nth-child(1) { transform: translate(-50%,-110px); }
+.tick:nth-child(2) { transform: translate(-50%,-110px) rotate(30deg); }
+.tick:nth-child(3) { transform: translate(-50%,-110px) rotate(60deg); }
+.tick:nth-child(4) { transform: translate(-50%,-110px) rotate(90deg); }
+.tick:nth-child(5) { transform: translate(-50%,-110px) rotate(120deg); }
+.tick:nth-child(6) { transform: translate(-50%,-110px) rotate(150deg); }
+.tick:nth-child(7) { transform: translate(-50%,-110px) rotate(180deg); }
+.tick:nth-child(8) { transform: translate(-50%,-110px) rotate(210deg); }
+.tick:nth-child(9) { transform: translate(-50%,-110px) rotate(240deg); }
+.tick:nth-child(10) { transform: translate(-50%,-110px) rotate(270deg); }
+.tick:nth-child(11) { transform: translate(-50%,-110px) rotate(300deg); }
+.tick:nth-child(12) { transform: translate(-50%,-110px) rotate(330deg); }
+
+.clock-bg.two .tick:nth-child(1) { transform: translate(-50%,-130px); }
+.clock-bg.two .tick:nth-child(2) { transform: translate(-50%,-130px) rotate(30deg); }
+.clock-bg.two .tick:nth-child(3) { transform: translate(-50%,-130px) rotate(60deg); }
+.clock-bg.two .tick:nth-child(4) { transform: translate(-50%,-130px) rotate(90deg); }
+.clock-bg.two .tick:nth-child(5) { transform: translate(-50%,-130px) rotate(120deg); }
+.clock-bg.two .tick:nth-child(6) { transform: translate(-50%,-130px) rotate(150deg); }
+.clock-bg.two .tick:nth-child(7) { transform: translate(-50%,-130px) rotate(180deg); }
+.clock-bg.two .tick:nth-child(8) { transform: translate(-50%,-130px) rotate(210deg); }
+.clock-bg.two .tick:nth-child(9) { transform: translate(-50%,-130px) rotate(240deg); }
+.clock-bg.two .tick:nth-child(10) { transform: translate(-50%,-130px) rotate(270deg); }
+.clock-bg.two .tick:nth-child(11) { transform: translate(-50%,-130px) rotate(300deg); }
+.clock-bg.two .tick:nth-child(12) { transform: translate(-50%,-130px) rotate(330deg); }
+
+.gear {
+    position: absolute;
+    width: 75px;
+    height: 75px;
+    border: 13px dotted rgba(255,255,255,.2);
+    border-radius: 50%;
+}
+
+.gear::before {
+    content: "";
+    position: absolute;
+    inset: 16px;
+    border-radius: 50%;
+    border: 8px solid rgba(255,255,255,.16);
+    background: rgba(0,0,0,.25);
+}
+
+.gear::after {
+    content: "";
+    position: absolute;
+    width: 17px;
+    height: 17px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-50%);
+    border-radius: 50%;
+    background: rgba(255,255,255,.2);
+    box-shadow: 0 0 18px rgba(124,92,255,.3);
+}
+
+.clock-bg .gear {
+    left: 50%;
+    top: 50%;
+}
+
+.clock-bg .gear.large {
+    width: 105px;
+    height: 105px;
+    border-width: 16px;
+    animation: gearSpin 7s linear infinite;
+}
+
+.clock-bg .gear.small {
+    width: 62px;
+    height: 62px;
+    border-width: 10px;
+    margin-left: 52px;
+    margin-top: 32px;
+    animation: gearSpinReverse 4s linear infinite;
+}
+
+.clock-bg .gear.small2 {
+    width: 52px;
+    height: 52px;
+    border-width: 9px;
+    margin-left: -72px;
+    margin-top: 48px;
+    animation: gearSpin 3.5s linear infinite;
+}
+
+.clock-bg .hand {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 4px;
+    height: 75px;
+    border-radius: 4px;
+    background: rgba(255,255,255,.2);
+    transform-origin: 50% 100%;
+    transform: translate(-50%,-100%);
+    animation: handSpin 8s linear infinite;
+}
+
+.clock-bg .hand.second {
+    width: 2px;
+    height: 95px;
+    background: rgba(124,92,255,.35);
+    animation-duration: 3s;
+}
+
+.outer-gear {
+    position: absolute;
+    width: 115px;
+    height: 115px;
+    border-radius: 50%;
+    border: 20px dotted rgba(124,92,255,.1);
+    animation: gearSpin 12s linear infinite;
+}
+
+.outer-gear.a {
+    left: 28%;
+    top: 10%;
+}
+
+.outer-gear.b {
+    right: 27%;
+    bottom: 10%;
+    animation-duration: 9s;
+    animation-direction: reverse;
+}
+
+@keyframes gearSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes gearSpinReverse {
+    to {
+        transform: rotate(-360deg);
+    }
+}
+
+@keyframes handSpin {
+    to {
+        transform: translate(-50%,-100%) rotate(360deg);
+    }
+}
+
+@keyframes clockFloat {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-22px) rotate(5deg);
+    }
+}
+
+@keyframes glowMove {
+    from {
+        transform: translate(0,0) scale(1);
+    }
+    to {
+        transform: translate(40px,30px) scale(1.12);
+    }
+}
+
+.app {
+    position: relative;
+    z-index: 5;
+    width: min(720px, 100%);
+    padding: 32px;
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    background: var(--panel);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    box-shadow:
+        0 35px 100px rgba(0,0,0,.55),
+        inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.logo {
+    width: 62px;
+    height: 62px;
+    margin: 0 auto 15px;
+    display: grid;
+    place-items: center;
+    border-radius: 18px;
+    font-size: 29px;
+    background: linear-gradient(135deg, var(--primary), var(--primary2));
+    box-shadow: 0 15px 40px rgba(124,92,255,.35);
+}
+
+h1 {
+    font-size: clamp(2rem, 6vw, 2.7rem);
+    letter-spacing: -.055em;
+}
+
+.subtitle {
+    color: var(--muted);
+    margin-top: 8px;
+}
+
+.panel {
+    padding: 21px;
+    margin-bottom: 17px;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 19px;
+    background: rgba(0,0,0,.18);
+}
+
+.label {
+    display: block;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .14em;
+    margin-bottom: 11px;
+}
+
+.task-row {
+    display: flex;
+    gap: 10px;
+}
+
+.input {
+    width: 100%;
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 13px;
+    padding: 14px 15px;
+    outline: none;
+    color: white;
+    background: rgba(255,255,255,.055);
+    transition: .2s;
+}
+
+.input:focus {
+    border-color: rgba(124,92,255,.8);
+    box-shadow: 0 0 0 4px rgba(124,92,255,.1);
+}
+
+.input::placeholder {
+    color: #70798f;
+}
+
+.btn {
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 13px;
+    padding: 13px 18px;
+    color: white;
+    background: rgba(255,255,255,.07);
+    cursor: pointer;
+    font-weight: 750;
+    transition: .2s;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    background: rgba(255,255,255,.12);
+}
+
+.btn:active {
+    transform: scale(.97);
+}
+
+.primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary2));
+    box-shadow: 0 12px 28px rgba(124,92,255,.25);
+}
+
+.saved-task {
+    display: none;
+    margin-top: 13px;
+    padding: 13px 14px;
+    border-radius: 12px;
+    background: rgba(74,222,128,.06);
+    border: 1px solid rgba(74,222,128,.13);
+    color: #c9f9d9;
+    font-size: .88rem;
+}
+
+.saved-task.show {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.saved-task strong {
+    color: white;
+}
+
+.delete-task {
+    color: #ff9aaa;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    font-size: 1.1rem;
+}
+
+.timer {
+    text-align: center;
+}
+
+.timer-display {
+    font-size: clamp(3.8rem, 14vw, 6.8rem);
+    line-height: 1;
+    font-weight: 850;
+    letter-spacing: -.075em;
+    font-variant-numeric: tabular-nums;
+    padding: 27px 0 30px;
+    text-shadow: 0 0 40px rgba(124,92,255,.2);
+}
+
+.timer-display.running {
+    animation: timerPulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes timerPulse {
+    from {
+        text-shadow: 0 0 18px rgba(124,92,255,.2);
+    }
+    to {
+        text-shadow: 0 0 48px rgba(124,92,255,.55);
+    }
+}
+
+.time-inputs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 17px;
+}
+
+.time-box label {
+    display: block;
+    color: var(--muted);
+    text-align: center;
+    font-size: .75rem;
+    margin-bottom: 7px;
+}
+
+.time-box input {
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.controls {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.pause {
+    color: #ffe38a;
+}
+
+.reset {
+    color: #ffb2bf;
+}
+
+.status {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: .82rem;
+    margin-top: 17px;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #687086;
+}
+
+.status.running .status-dot {
+    background: var(--green);
+    box-shadow: 0 0 13px var(--green);
+}
+
+.status.paused .status-dot {
+    background: var(--yellow);
+    box-shadow: 0 0 10px var(--yellow);
+}
+
+.tasks {
+    margin-top: 18px;
+}
+
+.tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.tasks-title {
+    color: var(--muted);
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+
+.clear-all {
+    border: 0;
+    background: transparent;
+    color: #858ea5;
+    cursor: pointer;
+    font-size: .75rem;
+}
+
+.task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.task-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 12px;
+    background: rgba(255,255,255,.035);
+    animation: taskIn .3s ease;
+}
+
+@keyframes taskIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.task-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.task-time {
+    color: #717a91;
+    font-size: .7rem;
+    white-space: nowrap;
+}
+
+.delete-item {
+    color: #fb7185;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.empty {
+    text-align: center;
+    padding: 14px;
+    color: #606a80;
+    font-size: .82rem;
+}
+
+.toast-container {
+    position: fixed;
+    right: 20px;
+    top: 20px;
+    width: min(390px, calc(100vw - 30px));
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 17px;
+    border: 1px solid rgba(255,255,255,.13);
+    border-radius: 15px;
+    background: rgba(15,20,35,.94);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 18px 50px rgba(0,0,0,.45);
+    animation: toastIn .4s cubic-bezier(.2,1,.3,1);
+}
+
+.toast.hide {
+    animation: toastOut .35s ease forwards;
+}
+
+.toast-icon {
+    width: 37px;
+    height: 37px;
+    flex: 0 0 37px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: rgba(124,92,255,.17);
+}
+
+.toast-content {
+    min-width: 0;
+}
+
+.toast-title {
+    font-size: .85rem;
+    font-weight: 800;
+}
+
+.toast-text {
+    color: #9aa2b7;
+    font-size: .77rem;
+    margin-top: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.toast-progress {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 100%;
+    background: var(--primary);
+    transform-origin: left;
+    animation: progress 3.5s linear forwards;
+}
+
+@keyframes toastIn {
+    from {
+        opacity: 0;
+        transform: translateX(120%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes toastOut {
+    to {
+        opacity: 0;
+        transform: translateX(120%);
+    }
+}
+
+@keyframes progress {
+    to {
+        transform: scaleX(0);
+    }
+}
+
+.alarm-mode {
+    animation: alarmFlash .45s ease-in-out infinite alternate;
+}
+
+@keyframes alarmFlash {
+    from {
+        box-shadow:
+            0 35px 100px rgba(0,0,0,.55),
+            0 0 0 rgba(251,113,133,0);
+    }
+    to {
+        box-shadow:
+            0 35px 100px rgba(0,0,0,.55),
+            0 0 70px rgba(251,113,133,.35);
+    }
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 14px;
+    }
+
+    .app {
+        padding: 20px 15px;
+        border-radius: 24px;
+    }
+
+    .panel {
+        padding: 16px;
+    }
+
+    .task-row {
+        flex-direction: column;
+    }
+
+    .controls {
+        grid-template-columns: 1fr;
+    }
+
+    .clock-bg.one {
+        left: -120px;
+    }
+
+    .clock-bg.two {
+        right: -150px;
+    }
+
+    .outer-gear {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="background">
+    <div class="grid"></div>
+    <div class="glow one"></div>
+    <div class="glow two"></div>
+
+    <div class="clock-bg one">
+        <div class="clock-face">
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+
+            <div class="gear large"></div>
+            <div class="gear small"></div>
+            <div class="gear small2"></div>
+
+            <div class="hand"></div>
+            <div class="hand second"></div>
+        </div>
+    </div>
+
+    <div class="clock-bg two">
+        <div class="clock-face">
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+            <span class="tick"></span>
+
+            <div class="gear large"></div>
+            <div class="gear small"></div>
+            <div class="gear small2"></div>
+
+            <div class="hand"></div>
+            <div class="hand second"></div>
+        </div>
+    </div>
+
+    <div class="outer-gear a"></div>
+    <div class="outer-gear b"></div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<main class="app" id="app">
+
+    <header class="header">
+        <div class="logo">⏱</div>
+        <h1>Focus Task Timer</h1>
+        <p class="subtitle">Stay focused. Complete your task. Own your time.</p>
+    </header>
+
+    <section class="panel">
+        <label class="label" for="taskInput">Current Task</label>
+
+        <div class="task-row">
+            <input
+                id="taskInput"
+                class="input"
+                type="text"
+                maxlength="150"
+                placeholder="What are you focusing on?"
+                autocomplete="off"
+            >
+
+            <button class="btn primary" id="saveTask">
+                Save Task
+            </button>
+        </div>
+
+        <div class="saved-task" id="savedTask">
+            <span>Current: <strong id="currentTask"></strong></span>
+            <button class="delete-task" id="deleteCurrentTask">×</button>
+        </div>
+
+        <div class="tasks">
+            <div class="tasks-header">
+                <span class="tasks-title">Saved Tasks</span>
+                <button class="clear-all" id="clearTasks">Clear All</button>
+            </div>
+
+            <div class="task-list" id="taskList"></div>
+        </div>
+    </section>
+
+    <section class="panel timer">
+
+        <span class="label">Focus Session</span>
+
+        <div class="timer-display" id="display">
+            00:25:00
+        </div>
+
+        <div class="time-inputs">
+
+            <div class="time-box">
+                <label for="hours">Hours</label>
+                <input
+                    class="input"
+                    id="hours"
+                    type="number"
+                    min="0"
+                    max="99"
+                    value="0"
+                >
+            </div>
+
+            <div class="time-box">
+                <label for="minutes">Minutes</label>
+                <input
+                    class="input"
+                    id="minutes"
+                    type="number"
+                    min="0"
+                    max="59"
+                    value="25"
+                >
+            </div>
+
+            <div class="time-box">
+                <label for="seconds">Seconds</label>
+                <input
+                    class="input"
+                    id="seconds"
+                    type="number"
+                    min="0"
+                    max="59"
+                    value="0"
+                >
+            </div>
+
+        </div>
+
+        <div class="controls">
+            <button class="btn primary" id="start">▶ Start</button>
+            <button class="btn pause" id="pause">❚❚ Pause</button>
+            <button class="btn reset" id="reset">↻ Reset</button>
+        </div>
+
+        <div class="status" id="status">
+            <span class="status-dot"></span>
+            <span id="statusText">Ready</span>
+        </div>
+
+    </section>
+
+</main>
+
+<script>
+"use strict";
+
+const taskInput = document.getElementById("taskInput");
+const saveTaskButton = document.getElementById("saveTask");
+const savedTask = document.getElementById("savedTask");
+const currentTask = document.getElementById("currentTask");
+const deleteCurrentTask = document.getElementById("deleteCurrentTask");
+const taskList = document.getElementById("taskList");
+const clearTasks = document.getElementById("clearTasks");
+
+const hours = document.getElementById("hours");
+const minutes = document.getElementById("minutes");
+const seconds = document.getElementById("seconds");
+
+const display = document.getElementById("display");
+const start = document.getElementById("start");
+const pause = document.getElementById("pause");
+const reset = document.getElementById("reset");
+
+const status = document.getElementById("status");
+const statusText = document.getElementById("statusText");
+const toastContainer = document.getElementById("toastContainer");
+const app = document.getElementById("app");
+
+let audioContext = null;
+let timer = null;
+let running = false;
+let paused = false;
+let remaining = 1500;
+let endTime = null;
+
+const TASKS_KEY = "focus_task_timer_tasks";
+const CURRENT_TASK_KEY = "focus_task_timer_current_task";
+const DURATION_KEY = "focus_task_timer_duration";
+
+function getTasks() {
+    try {
+        return JSON.parse(localStorage.getItem(TASKS_KEY)) || [];
+    } catch {
+        return [];
+    }
+}
+
+function saveTasks(tasks) {
+    localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+}
+
+function showToast(title, text, icon = "✓") {
+    const toast = document.createElement("div");
+    toast.className = "toast";
+
+    toast.innerHTML = `
+        <div class="toast-icon">${icon}</div>
+        <div class="toast-content">
+            <div class="toast-title"></div>
+            <div class="toast-text"></div>
+        </div>
+        <div class="toast-progress"></div>
+    `;
+
+    toast.querySelector(".toast-title").textContent = title;
+    toast.querySelector(".toast-text").textContent = text;
+
+    toastContainer.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add("hide");
+
+        setTimeout(() => {
+            toast.remove();
+        }, 350);
+    }, 3500);
+}
+
+function renderTasks() {
+    const tasks = getTasks();
+    taskList.innerHTML = "";
+
+    if (!tasks.length) {
+        taskList.innerHTML = `<div class="empty">No saved tasks yet.</div>`;
+        return;
+    }
+
+    tasks.forEach((task, index) => {
+        const item = document.createElement("div");
+        item.className = "task-item";
+
+        const name = document.createElement("div");
+        name.className = "task-name";
+        name.textContent = task.name;
+
+        const time = document.createElement("div");
+        time.className = "task-time";
+        time.textContent = task.time;
+
+        const remove = document.createElement("button");
+        remove.className = "delete-item";
+        remove.textContent = "×";
+
+        remove.addEventListener("click", () => {
+            const updated = getTasks();
+            updated.splice(index, 1);
+            saveTasks(updated);
+            renderTasks();
+            showToast("Task Removed", task.name, "×");
+        });
+
+        item.appendChild(name);
+        item.appendChild(time);
+        item.appendChild(remove);
+
+        taskList.appendChild(item);
+    });
+}
+
+function saveTask() {
+    const value = taskInput.value.trim();
+
+    if (!value) {
+        showToast("Task Required", "Enter a task before saving.", "!");
+        taskInput.focus();
+        return;
+    }
+
+    localStorage.setItem(CURRENT_TASK_KEY, value);
+
+    const tasks = getTasks();
+
+    tasks.unshift({
+        name: value,
+        time: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+        })
+    });
+
+    saveTasks(tasks.slice(0, 50));
+
+    currentTask.textContent = value;
+    savedTask.classList.add("show");
+
+    showToast("Task Saved", value, "✓");
+
+    taskInput.value = "";
+    renderTasks();
+}
+
+function deleteCurrent() {
+    localStorage.removeItem(CURRENT_TASK_KEY);
+    currentTask.textContent = "";
+    savedTask.classList.remove("show");
+    showToast("Current Task Removed", "The current task has been cleared.", "×");
+}
+
+function clearAllTasks() {
+    if (!getTasks().length) {
+        showToast("No Tasks", "There are no saved tasks.", "ℹ");
+        return;
+    }
+
+    localStorage.removeItem(TASKS_KEY);
+    renderTasks();
+    showToast("Tasks Cleared", "All saved tasks have been removed.", "×");
+}
+
+function loadTask() {
+    const task = localStorage.getItem(CURRENT_TASK_KEY);
+
+    if (task) {
+        currentTask.textContent = task;
+        savedTask.classList.add("show");
+    }
+
+    renderTasks();
+}
+
+function getDuration() {
+    const h = Math.max(0, Math.min(99, Number(hours.value) || 0));
+    const m = Math.max(0, Math.min(59, Number(minutes.value) || 0));
+    const s = Math.max(0, Math.min(59, Number(seconds.value) || 0));
+
+    hours.value = h;
+    minutes.value = m;
+    seconds.value = s;
+
+    return h * 3600 + m * 60 + s;
+}
+
+function saveDuration() {
+    localStorage.setItem(
+        DURATION_KEY,
+        JSON.stringify({
+            hours: hours.value,
+            minutes: minutes.value,
+            seconds: seconds.value
+        })
+    );
+}
+
+function loadDuration() {
+    try {
+        const data = JSON.parse(
+            localStorage.getItem(DURATION_KEY)
+        );
+
+        if (data) {
+            hours.value = data.hours ?? 0;
+            minutes.value = data.minutes ?? 25;
+            seconds.value = data.seconds ?? 0;
+        }
+    } catch {}
+}
+
+function formatTime(value) {
+    value = Math.max(0, value);
+
+    const h = Math.floor(value / 3600);
+    const m = Math.floor((value % 3600) / 60);
+    const s = value % 60;
+
+    return [
+        String(h).padStart(2, "0"),
+        String(m).padStart(2, "0"),
+        String(s).padStart(2, "0")
+    ].join(":");
+}
+
+function updateDisplay() {
+    display.textContent = formatTime(remaining);
+    document.title =
+        running
+            ? `${formatTime(remaining)} • Focus Timer`
+            : "Focus Task Timer";
+}
+
+function setStatus(type, text) {
+    status.className = "status";
+
+    if (type) {
+        status.classList.add(type);
+    }
+
+    statusText.textContent = text;
+}
+
+function initAudio() {
+    if (!audioContext) {
+        const Audio =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+        if (Audio) {
+            audioContext = new Audio();
+        }
+    }
+
+    if (
+        audioContext &&
+        audioContext.state === "suspended"
+    ) {
+        audioContext.resume();
+    }
+}
+
+function tone(
+    frequency,
+    duration,
+    volume,
+    type = "square",
+    delay = 0
+) {
+    if (!audioContext) return;
+
+    const oscillator =
+        audioContext.createOscillator();
+
+    const gain =
+        audioContext.createGain();
+
+    const startTime =
+        audioContext.currentTime + delay;
+
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(
+        frequency,
+        startTime
+    );
+
+    gain.gain.setValueAtTime(
+        0.0001,
+        startTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        volume,
+        startTime + 0.008
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        0.0001,
+        startTime + duration
+    );
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+
+    oscillator.start(startTime);
+    oscillator.stop(
+        startTime + duration + 0.03
+    );
+}
+
+function tick() {
+    initAudio();
+
+    tone(
+        1450,
+        0.035,
+        0.065,
+        "square"
+    );
+
+    tone(
+        720,
+        0.055,
+        0.035,
+        "triangle",
+        0.025
+    );
+
+    tone(
+        300,
+        0.025,
+        0.018,
+        "square",
+        0.055
+    );
+}
+
+function alarm() {
+    initAudio();
+
+    const notes = [
+        [523, 0],
+        [659, .18],
+        [784, .36],
+        [1046, .54],
+        [784, .78],
+        [1046, .96],
+        [1318, 1.14],
+        [1046, 1.38],
+        [1318, 1.56],
+        [1568, 1.74]
+    ];
+
+    notes.forEach(([frequency, delay]) => {
+        tone(
+            frequency,
+            .22,
+            .18,
+            "sine",
+            delay
+        );
+
+        tone(
+            frequency / 2,
+            .22,
+            .055,
+            "triangle",
+            delay
+        );
+    });
+}
+
+function startTimer() {
+    if (running) {
+        showToast(
+            "Timer Running",
+            "The timer is already running.",
+            "ℹ"
+        );
+        return;
+    }
+
+    if (!paused) {
+        remaining = getDuration();
+    }
+
+    if (remaining <= 0) {
+        showToast(
+            "Invalid Duration",
+            "Set a duration greater than zero.",
+            "!"
+        );
+        return;
+    }
+
+    initAudio();
+
+    running = true;
+    paused = false;
+
+    endTime =
+        Date.now() +
+        remaining * 1000;
+
+    display.classList.add("running");
+    setStatus("running", "Focus session active");
+
+    hours.disabled = true;
+    minutes.disabled = true;
+    seconds.disabled = true;
+
+    showToast(
+        "Timer Started",
+        localStorage.getItem(CURRENT_TASK_KEY) ||
+        "Focus session started.",
+        "▶"
+    );
+
+    tick();
+
+    clearInterval(timer);
+
+    timer = setInterval(() => {
+        remaining = Math.max(
+            0,
+            Math.ceil(
+                (endTime - Date.now()) / 1000
+            )
+        );
+
+        updateDisplay();
+
+        if (remaining > 0) {
+            tick();
+        }
+
+        if (remaining <= 0) {
+            finishTimer();
+        }
+    }, 1000);
+}
+
+function pauseTimer() {
+    if (!running) {
+        showToast(
+            "Timer Not Running",
+            "Start the timer before pausing it.",
+            "ℹ"
+        );
+        return;
+    }
+
+    clearInterval(timer);
+
+    remaining = Math.max(
+        0,
+        Math.ceil(
+            (endTime - Date.now()) / 1000
+        )
+    );
+
+    running = false;
+    paused = true;
+
+    display.classList.remove("running");
+
+    setStatus("paused", "Timer paused");
+
+    showToast(
+        "Timer Paused",
+        "Your focus session is paused.",
+        "❚❚"
+    );
+}
+
+function resetTimer() {
+    clearInterval(timer);
+
+    running = false;
+    paused = false;
+
+    remaining = getDuration();
+
+    display.classList.remove("running");
+
+    hours.disabled = false;
+    minutes.disabled = false;
+    seconds.disabled = false;
+
+    app.classList.remove("alarm-mode");
+
+    setStatus("", "Ready");
+
+    updateDisplay();
+
+    showToast(
+        "Timer Reset",
+        "The timer has been reset.",
+        "↻"
+    );
+}
+
+function finishTimer() {
+    clearInterval(timer);
+
+    running = false;
+    paused = false;
+    remaining = 0;
+
+    display.classList.remove("running");
+
+    hours.disabled = false;
+    minutes.disabled = false;
+    seconds.disabled = false;
+
+    setStatus("", "Time's up!");
+
+    updateDisplay();
+
+    app.classList.add("alarm-mode");
+
+    alarm();
+
+    const task =
+        localStorage.getItem(CURRENT_TASK_KEY);
+
+    showToast(
+        "Time's Up!",
+        task
+            ? `"${task}" session is complete.`
+            : "Your focus session is complete.",
+        "⏰"
+    );
+
+    setTimeout(() => {
+        app.classList.remove("alarm-mode");
+    }, 4500);
+}
+
+saveTaskButton.addEventListener(
+    "click",
+    saveTask
+);
+
+taskInput.addEventListener(
+    "keydown",
+    event => {
+        if (event.key === "Enter") {
+            saveTask();
+        }
+    }
+);
+
+deleteCurrentTask.addEventListener(
+    "click",
+    deleteCurrent
+);
+
+clearTasks.addEventListener(
+    "click",
+    clearAllTasks
+);
+
+[start, pause, reset].forEach(() => {});
+
+start.addEventListener(
+    "click",
+    startTimer
+);
+
+pause.addEventListener(
+    "click",
+    pauseTimer
+);
+
+reset.addEventListener(
+    "click",
+    resetTimer
+);
+
+[hours, minutes, seconds].forEach(input => {
+    input.addEventListener("input", () => {
+        if (!running) {
+            remaining = getDuration();
+            saveDuration();
+            updateDisplay();
+        }
+    });
+});
+
+document.addEventListener(
+    "keydown",
+    event => {
+        if (
+            event.target.tagName === "INPUT"
+        ) {
+            return;
+        }
+
+        if (event.code === "Space") {
+            event.preventDefault();
+
+            if (running) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        if (
+            event.key.toLowerCase() === "r"
+        ) {
+            resetTimer();
+        }
+    }
+);
+
+loadDuration();
+loadTask();
+
+remaining = getDuration();
+updateDisplay();
+</script>
+
+</body>
+</html>
+```
